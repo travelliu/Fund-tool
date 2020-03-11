@@ -45,6 +45,8 @@ var $ajax = function(param, callback){
     }
     var xhr = new XMLHttpRequest();
     xhr.open(obj.type, obj.url);
+    xhr.setRequestHeader("Access-Control-Allow-Origin", '*');
+    // xhr.setRequestHeader("Access-Control-Allow-Headers", "X-Requested-With");
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
             switch (xhr.status){
@@ -79,7 +81,8 @@ var $ajax = function(param, callback){
             }
         }
     }
-    xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
+    console.log(data)
+    // xhr.setRequestHeader("x-requested-with", 'XMLHttpRequest');
     xhr.setRequestHeader("accept", 'application/json');
     xhr.send(data);
 
@@ -133,6 +136,7 @@ var refreshFund = function (user) {
                                     if(record){
                                         //组装并更新对应基金的实时估算值
                                         record['now'] = fund['gsz'];
+                                        record['nowzl'] = fund['gszzl'];
                                         record['gztime'] = fund['gztime'];
                                         record['name'] = fund['name'];
                                         localStorage.setItem(fund['fundcode'], JSON.stringify(record));
@@ -184,8 +188,11 @@ var refreshJingzhi = function (user) {
                                     var jingzhi_time = $(result_match[0]).find('td').html();
                                     var record = JSON.parse(localStorage.getItem(key))
                                     if(!isBlank(jingzhi) && !isBlank(jingzhi_time) && !isBlank(record) ){
-                                        record['jingzhi'] = jingzhi;
+                                        if (record['jingzhi_time'] != jingzhi_time) {
+                                            record['last_jingzhi'] = record['jingzhi']
+                                        }
                                         record['jingzhi_time'] = jingzhi_time;
+                                        record['jingzhi'] = jingzhi;
                                         localStorage.setItem(key, JSON.stringify(record));
                                     }
                                 }
@@ -210,9 +217,9 @@ var refreshJingzhi = function (user) {
  */
 var cloudBackUp = function (user) {
     var apikey = localStorage.getItem('apikey');
-    if(isBlank(apikey)){
-        return true;
-    }
+    // if(isBlank(apikey)){
+    //     return true;
+    // }
 
     var bak = {};
 
@@ -226,7 +233,7 @@ var cloudBackUp = function (user) {
     }
 
     var param = {
-        url : API_URL+'/Api/Backup/append/'+Math.random(),
+        url : getBackUrl(),
         data : {
             apikey : apikey,
             backup : JSON.stringify(bak)
@@ -237,4 +244,77 @@ var cloudBackUp = function (user) {
     $ajax(param, function (data) {
     })
 
+}
+
+/**
+ * 云备份
+ * @param user 用户操作备份
+ * @returns {boolean}
+ */
+Date.prototype.Format = function (fmt) { // author: meizz
+    var o = {
+        "M+": this.getMonth() + 1, // 月份
+        "d+": this.getDate(), // 日
+        "h+": this.getHours(), // 小时
+        "m+": this.getMinutes(), // 分
+        "s+": this.getSeconds(), // 秒
+        "q+": Math.floor((this.getMonth() + 3) / 3), // 季度
+        "S": this.getMilliseconds() // 毫秒
+    };
+    if (/(y+)/.test(fmt))
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+}
+
+var getCurrentDate = function () {
+    var now = new Date();
+    var year = now.getFullYear(); //得到年份
+    var month = now.getMonth() + 1;//得到月份
+    var day = now.getDate();//
+    if (month < 10) {
+        month = "0" + month;
+    }
+    if (day < 10) {
+        day = "0" + day;
+    }
+    var nowDate = year + "-" + month + "-" + day;
+    return nowDate
+}
+
+var getCurrentTime = function () {
+    var now = new Date();
+    return now.Format("yyyy-MM-dd hh:mm:ss")
+}
+
+var getBackUrl = function() {
+    var url = API_URL+'/Api/Backup/append/'+Math.random()
+    var apiurl = localStorage.getItem('apiurl');
+    if (apiurl != '') {
+        url = apiurl
+    }
+    return url
+}
+
+var processPrice = function(record) {
+    record['adding'] = (record['jingzhi'] * (1-record['addingPercent']/100)).toFixed(4)
+    record['sell'] = (record['buy'] * (1+record['sellPercent']/100)).toFixed(4)
+    // 如果上次净值为空这复制为当前最新
+    if (typeof record['jingzhi'] === "undefined") {
+        record['adding'] = (record['buy'] * (1-record['addingPercent']/100)).toFixed(4)
+    }
+    if (typeof record['last_jingzhi'] === "undefined") {
+        record['last_jingzhi'] = record['jingzhi']
+    }
+    if (typeof record['now'] === "undefined") {
+        record['now'] = '-'
+    }
+    if (typeof record['nowzl'] === "undefined") {
+        record['nowzl'] = '-'
+    }
+    if (typeof record['gztime'] === "undefined") {
+        record['gztime'] = '-'
+    }
+    return record
 }

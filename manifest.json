@@ -1,41 +1,27 @@
 {
-	"manifest_version": 2,
-	"name": "基金定投助手",
-	"version": "1.6.6",
-	"description": "一款简单的基金定投助手",
-
-	"icons":
-	{
-		"16": "img/icon.png",
-		"48": "img/icon.png",
-		"128": "img/icon.png"
-	},
-
-	"background":
-	{
-		"page": "background.html",
-		"persistent": true
-	},
-	"browser_action":
-	{
-		"default_icon": "img/icon.png",
-		"default_title": "基金定投助手",
-		"default_popup": "popup.html"
-	},
-	"permissions":
-	[
-		"*://*.1234567.com.cn/*",
-		"*://*.eastmoney.com/*",
-		"*://fund.pescms.com/*",
-		"alarms",
-		"notifications",
-		"webRequest",
-		"webRequestBlocking",
-		"storage"
-	],
-	"content_scripts": [{
-		"js": ["js/jquery-1.8.3.js","js/fund.js"],
-		"matches": ["*://fund.pescms.com/*"]
-	}],
-	"homepage_url": "https://www.pescms.com"
+   "background": {
+      "page": "background.html",
+      "persistent": true
+   },
+   "browser_action": {
+      "default_icon": "img/icon.png",
+      "default_popup": "popup.html",
+      "default_title": "基金定投助手2"
+   },
+   "content_scripts": [ {
+      "js": [ "js/jquery-1.8.3.js", "js/fund.js" ],
+      "matches": [ "*://fund.pescms.com/*" ]
+   } ],
+   "description": "一款简单的基金定投助手",
+   "homepage_url": "https://www.pescms.com",
+   "icons": {
+      "128": "img/icon.png",
+      "16": "img/icon.png",
+      "48": "img/icon.png"
+   },
+   "manifest_version": 2,
+   "name": "基金定投助手2",
+   "permissions": [ "*://*.1234567.com.cn/*", "*://*.eastmoney.com/*", "*://fund.pescms.com/*", "alarms", "notifications", "webRequest", "webRequestBlocking", "storage" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.8.0"
 }

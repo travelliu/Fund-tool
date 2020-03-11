@@ -39,12 +39,12 @@ var notifications = function(){
 
 
                 if (parseFloat(json_str.now) >= parseFloat(json_str.sell) && notice != 2 && notice != 4 ) {
-                    msg += ' 基金涨幅已达到可卖出价格，请及时处理';
+                    msg += ' 基金涨幅'+json_str.now+'已达到可卖出价格'+json_str.sell+'，请及时处理';
                     icon = 'sell.png';
                     saveNotice[i] = getNoticeLocalStorage == null || !getNoticeLocalStorage[date] || !getNoticeLocalStorage[date][i] ? 11 : getNoticeLocalStorage[date][i] + 1;
 
                 } else if (parseFloat(json_str.adding) >= parseFloat(json_str.now) && notice != 2 && notice != 6 ) {
-                    msg += ' 基金跌幅已达到补仓价格，请及时处理';
+                    msg += ' 基金跌幅'+json_str.now+'已达到补仓价格'+json_str.adding+'，请及时处理.';
                     icon = 'adding.png';
                     saveNotice[i] = getNoticeLocalStorage == null || !getNoticeLocalStorage[date] || !getNoticeLocalStorage[date][i] ? 11 : getNoticeLocalStorage[date][i] + 1;
                 }else{
@@ -71,10 +71,4 @@ var notifications = function(){
     localStorage.setItem("saveNotice", JSON.stringify({[date] : saveNotice}));
 }
 
-chrome.alarms.onAlarm.addListener(function(alarm) {
-    refreshFund(false)
-    refreshJingzhi(false)
-    notifications();
-});
-//創造定時器
-chrome.alarms.create('testAlarm',{periodInMinutes: 1});
+

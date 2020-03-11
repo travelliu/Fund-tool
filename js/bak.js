@@ -10,7 +10,7 @@ var restore_data = function (json) {
                 localStorage.removeItem(i);
             }
         }
-
+        console.log(json)
         var json_content = JSON.parse(json)
         for(var i in json_content){
             localStorage.setItem(i, JSON.stringify(json_content[i]));
@@ -28,7 +28,7 @@ $(function(){
 
     //清空预览数据
     localStorage.setItem('preview', '');
-
+    var apiurl = getBackUrl();
     /**
      * 在页面列出手动备份的JSON
      */
@@ -80,12 +80,12 @@ $(function(){
 
 
         var apikey = localStorage.getItem('apikey');
-        if(isBlank(apikey)){
-            return true;
-        }
+        // if(isBlank(apikey)){
+        //     return true;
+        // }
 
         var param = {
-            url : API_URL+'/Api/Backup/restore/'+Math.random(),
+            url : apiurl,
             data : {
                 apikey : apikey,
                 restore : $(this).attr('data'),
@@ -93,7 +93,9 @@ $(function(){
             },
             dialog : false
         };
+        console.log(param)
         $ajax(param, function (content) {
+            console.log(content)
             if(content.status == 200){
                 if(preview){
                     localStorage.setItem('preview', content['data'][0]['json']);
@@ -112,20 +114,20 @@ $(function(){
      */
     var loadApiKeyContent = function(){
         var apikey = localStorage.getItem('apikey');
-        if(isBlank(apikey)){
-            return true;
-        }
+        // if(isBlank(apikey)){
+        //     return true;
+        // }
         $('.am-backup-hide').show();
-        
+
         var param = {
-            url : API_URL+'/Api/Backup/'+Math.random(),
+            url : apiurl,
             data : {
                 apikey : apikey,
                 method : 'GET'
             },
             dialog : false
         };
-        
+        console.log('loadApiKeyContent')
         $ajax(param, function (content) {
             var str = '';
             if(content.status == 200){
@@ -153,6 +155,8 @@ $(function(){
         })
 
         $('.apikey').val(apikey);
+        $('.apiurl').val(apiurl);
+
     }();
 
     /**
@@ -160,13 +164,14 @@ $(function(){
      */
     $('.record-api').on('click', function(){
         var apikey = $('.apikey').val();
-        if(isBlank(apikey)){
-            alert('请输入API密钥')
-            return false;
-        }
+        var apiurl = $('.apiurl').val();
+        // if(isBlank(apikey)){
+        //     alert('请输入API密钥')
+        //     return false;
+        // }
 
         var param = {
-            url : API_URL+'/Api/Backup/check/'+Math.random(),
+            url : apiurl,
             data: {apikey:apikey},
             dialog: false
         };
@@ -174,15 +179,16 @@ $(function(){
         $ajax(param, function(data, d){
             console.dir(data)
             if(data.status == 200){
-                var msg = '接口APIKEY已更新'
+                var msg = '接口已更新'
                 localStorage.setItem('apikey', apikey);
+                localStorage.setItem('apiurl', apiurl);
             }else{
                 var msg = data.msg;
             }
             d.content(msg).showModal();
             setTimeout(function () {
                 d.close();
-                window.location.reload();
+                // window.location.reload();
             }, 3000);
         });
     })
@@ -205,7 +211,7 @@ $(function(){
         var apikey = localStorage.getItem('apikey');
         var no = $(this).attr('data');
         var param = {
-            url : API_URL+'/Api/Backup/'+Math.random(),
+            url : apiurl,
             data : {
                 apikey: apikey,
                 method: 'DELETE',

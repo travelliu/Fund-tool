@@ -21,12 +21,20 @@ var _list = function(){
     var storage = $_GET['preview'] == 'true' ? preview : localStorage;
 
 
+    // var storage_key = storage == null ? {} : Object.keys(storage).sort();
+    // console.log(Object.keys(storage))
     var storage_key = storage == null ? {} : Object.keys(storage).sort();
 
+    refreshFund(true);
+    refreshJingzhi(true)
 
 	$('.fund_list').remove();
     var total = 0;
     var total_jingzhi = 0;
+    var total_cost = 0
+    var total_now = 0
+    var total_yingkui_now = 0
+    var total_jingzhi_now = 0
     var append_str = '';
 	for(var i in storage_key){
 
@@ -35,19 +43,29 @@ var _list = function(){
 
 			if(content != ''){
 				var json_str = JSON.parse( content );
-
+                var json_str = processPrice(json_str)
 				var light = '';
-
-				if(parseFloat(json_str.now) >= parseFloat(json_str.sell)){
-					light = 'am-danger';
-				}else if(parseFloat(json_str.adding) >= parseFloat(json_str.now)){
-					light = 'am-success';
-				}
-
+                var light_now = '';
+                var yingkui_now = 0
+                var jingzhi_now = 0
 				//由于新版没有这个变量，需要手动判断是否为空
 				var fene = isBlank(json_str.fene) ? '' : parseFloat(json_str.fene);
 				var jingzhi = isBlank(json_str.jingzhi) ? '' : parseFloat(json_str.jingzhi);
 				var jingzhi_time = isBlank(json_str.jingzhi_time) ? '' : '( '+json_str.jingzhi_time+' )';
+                // json_str.adding = (json_str.jingzhi * (1-json_str.addingPercent/100)).toFixed(4)
+                // json_str.sell = (json_str.buy * (1+json_str.sellPercent/100)).toFixed(4)
+                // json_str.adding = 0.8000
+
+                if(parseFloat(json_str.adding) >= parseFloat(json_str.now)){
+                    light = 'am-success';
+                }
+                if (parseFloat(json_str.now) >= parseFloat(json_str.sell)) {
+                    light = 'am-danger';
+                }
+
+                // console.log(json_str.adding)
+                // console.log(json_str.now)
+                // console.log(parseFloat(json_str.adding) <= parseFloat(json_str.now))
 				//盈亏估算 = 持有份额 * 最新价格 - 成本价 * 持有份额
 				var yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(json_str.now) - json_str.buy * fene).toFixed(2) ;
                 if(isNumeric(yingkui)){
@@ -60,6 +78,52 @@ var _list = function(){
                     total_jingzhi += parseFloat(yingkui_jingzhi);
                 }
 
+
+                if(fene == 0 || json_str.buy == 0){
+                    var chiyoushouyi_baifenbi = '-';
+                    var zuixin_baifenbi = '-';
+                }else{
+                    var chiyoushouyi_baifenbi = '持有: ' + (yingkui_jingzhi / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
+                    var zuixin_baifenbi = '实时: ' + (yingkui / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
+                    yingkui_now = ((json_str.now-jingzhi) * fene).toFixed(2)
+                    // console.log(json_str.jingzhi,json_str.last_jingzhi)
+                    // 净值计算今日收益.
+                    jingzhi_now = ((json_str.jingzhi-json_str.last_jingzhi) * fene).toFixed(2)
+                    // console.log(jingzhi_now,json_str.code)
+                    // json_str.gztime = "2020-02-25 13:00"
+                    // console.log(json_str.gztime,gztime,nowTime)
+                    // console.log( getCurrentDate(),json_str.gztime,json_str.jingzhi_time,getCurrentTime())
+                    // console.log( getCurrentTime() , json_str.gztime,getCurrentTime()- json_str.gztime)
+                    // console.log((getCurrentDate() >= json_str.jingzhi_time))
+                    // console.log((json_str.gztime >= getCurrentDate()) && (getCurrentDate() >= json_str.jingzhi_time))
+                    // json_str.gztime = "2020-02-25 13:00"
+                    // json_str.jingzhi_time = "2020-02-25"
+                    var gztime1 = json_str.gztime.substring(0,10)
+                    var gztime = new Date(json_str.gztime).getTime()
+                    var nowTime = new Date().getTime()
+                    // 当前时间和估值时间大约9小时后不在计算 或者净值更新后
+                    // if (( ( nowTime - gztime ) > 9*3600*1000 ) || (gztime1 == json_str.jingzhi_time) ) {
+                    if ( (gztime1 == json_str.jingzhi_time) ) {
+                        // console.log(getCurrentDate())
+                        // console.log(json_str.gztime)
+                        // console.log(getCurrentDate() >= json_str.gztime)
+                         zuixin_baifenbi = '实时: 0%'
+                         yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
+                         yingkui_now = 0
+                    }
+                }
+                // 净值时间和当前时间一样.则估算为0
+                // if (json_str.jingzhi_time == getCurrentDate() ) {
+                //     json_str.now = jingzhi
+                // }
+
+                // 持有成本总金额
+                total_cost += json_str.buy*fene
+                // 现在持有金额
+                total_now  += json_str.now*fene
+
+                total_yingkui_now += parseFloat(yingkui_now)
+                total_jingzhi_now += parseFloat(jingzhi_now)
                 var notice = isBlank(json_str.notice) ? '' : parseInt(json_str.notice);
                 var notice_icon = '';
                 switch(notice){
@@ -75,43 +139,76 @@ var _list = function(){
                     default:
                         notice_icon = '';
                 }
-
+                if ( json_str.nowzl > 0 ){
+                    light_now = 'am-danger';
+                } else if ( json_str.nowzl < 0 ){
+                    light_now = 'am-success';
+                }
 
 				append_str += '' +
 					'<tr class="fund_list '+json_str.code+' '+light+' ">' +
-						'<td class="am-text-middle am-show-lg-only">' +
-                    '<label class="am-checkbox-inline"><input name="notice[]" type="checkbox" value="'+json_str.code+'"> '+json_str.name+' <i class="'+notice_icon+'"></i> </label>' +
-
-                    '</td>' +
-						'<td class="am-text-middle" title="'+json_str.name+'">'+json_str.code+' <i class="view-fund am-icon-external-link" data="'+json_str.code+'"></i></td>' +
-						'<td class="am-text-middle"><input type="text" class="am-text-center input-size" value="'+json_str.buy+'"  placeholder-text="购入价格"  name="buy" /></td>' +
+					   '<td class="am-text-middle ">' +
+                            '<span class="am-block">'+json_str.code+' <i class="view-fund am-icon-external-link" data="'+json_str.code+'"></i></span>'+
+                            '<label class="am-checkbox-inline "><input name="notice[]" type="checkbox" value="'+json_str.code+'"> '+json_str.name+' <i class="'+notice_icon+'"></i> </label>' +
+                        '</td>' +
+						'<td class="am-text-middle"><input type="text" size="6" value="'+json_str.buy+'"  placeholder-text="购入价格"  name="buy" /></td>' +
 						'<td class="am-text-middle">' +
-                    '<input type="text" class="am-text-center input-size" value="'+json_str.adding+'"  placeholder-text="补仓价格提醒" name="adding" />' +
+                            ' - <input type="text" size="2" value="'+json_str.addingPercent+'"  placeholder-text="补仓价格" name="addingPercent" /> % / ' +
+                            '<span>'+json_str.adding+'</span>'+
 						'</td>' +
 						'<td class="am-text-middle">' +
-							'<input type="text" class="am-text-center input-size" value="'+json_str.sell+'"  placeholder-text="卖出价格提醒" name="sell" />' +
+							'<input type="text" size="2" value="'+json_str.sellPercent+'"  placeholder-text="卖出价格" name="sellPercent" /> % / ' +
+                            '<span>'+json_str.sell+'</span>'+
 						'</td>' +
-                    '<td class="am-text-middle">' +
-                    '<input type="text" class="am-text-center input-size" value="'+fene+'" placeholder-text="持有份额" name="fene" />' +
-                    '</td>' +
-						'<td class="am-text-middle" title="最后更新时间: '+json_str.gztime+'">'+json_str.now+'</td>' +
-						'<td class="am-text-middle">'+yingkui+'</td>' +
+                        // 份额
+                        '<td class="am-text-middle">' +
+                            '<input type="text" size="8" value="'+fene+'" placeholder-text="持有份额" name="fene" />' +
+                        '</td>' +
+                        // 最新估值
+						'<td class="am-text-middle '+ light_now +'" title="最后更新时间: '+json_str.gztime+'">'+json_str.now+'<span class="am-block">'+json_str.nowzl+'%</span></td>' +
+						// '<td class="am-text-middle">'+yingkui+'</td>' +
+                        // 盈亏估算
+                        '<td class="am-text-middle">' +
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+yingkui_now+'</span>'+
+                            '<span class="am-block">'+yingkui+'</span>'+
+                        '</td>' +
+                        // 单位净值
 						'<td class="am-text-middle am-show-lg-only">'+jingzhi+'<span class="am-text-xs am-block">'+jingzhi_time+'</span></td>' +
-						'<td class="am-text-middle am-show-lg-only">'+yingkui_jingzhi+'</td>' +
-						'<td class="am-text-middle"><div class="am-inline-block">' +
-							'<span class="am-btn am-btn-xs am-btn-primary" data="'+json_str.code+'">修改</span>' +
-							'<span class="am-btn am-btn-xs am-btn-warning fund-analyze" data="'+json_str.code+'">分析</span>' +
-							'<span class="am-btn am-btn-xs am-btn-danger am-show-lg-only" data="'+json_str.code+'">删除</span>' +
-						'</div></td>' +
+                        // 持有收益
+						// '<td class="am-text-middle am-show-lg-only">'+yingkui_jingzhi+'</td>' +
+                        '<td class="am-text-middle am-show-lg-only">' +
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+jingzhi_now+'</span>'+
+                            '<span class="am-block">'+yingkui_jingzhi+'</span>'+
+                        '</td>' +
+                        // 收益比
+						'<td class="am-text-middle am-show-lg-only">' +
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+zuixin_baifenbi+'</span>'+
+                            '<span class="am-block">'+chiyoushouyi_baifenbi+'</span>'+
+                        '</td>' +
+						'<td class="am-text-middle">'+
+                            '<div class="am-inline-block">' +
+                                '<span class="am-btn am-btn-xs am-btn-primary" data="'+json_str.code+'">修改</span>' +
+                                '<span class="am-btn am-btn-xs am-btn-warning fund-analyze" data="'+json_str.code+'">分析</span>' +
+                                '<span class="am-btn am-btn-xs am-btn-danger am-show-lg-only" data="'+json_str.code+'">删除</span>' +
+                             '</div>'+
+                        '</td>' +
                     '</tr>';
 			}
 		}
 	}
+
+
     $('#add').after(append_str);
+    $('.total_cost').html(total_cost.toFixed(2));
+    $('.total_now').html(total_now.toFixed(2));
 
 	$('.total').html(total.toFixed(2));
+    $('.total_yingkui_now').html(total_yingkui_now.toFixed(2));
 	$('.total_jingzhi').html(total_jingzhi.toFixed(2));
-
+    $('.total_jingzhi_now').html(total_jingzhi_now.toFixed(2));
+    // console.log(getCurrentTime())
+    $('.refresh_time').html("刷新时间:" + getCurrentTime());
+    // $('.refreshTime').html(localStorage.getItem('refreshTime'));
     if($_GET['preview'] == 'true') {
         $('input').attr('disabled', 'disabled')
         $('.am-btn').remove();
@@ -122,7 +219,15 @@ var _list = function(){
 
 }
 
+var getRefreshTime = function(){
+    // var input_content = $('#refreshTime input').serializeArray();
+    // var value = input_content[0]['value'];
+    return 5
+    // return parseInt(value)
+}
+
 $(function() {
+    refreshTime = getRefreshTime()
 
 	//清空图表下方的数字提醒
     chrome.browserAction.setBadgeText({text: ""});
@@ -155,8 +260,10 @@ $(function() {
 
         localStorage.setItem(input_content[0]['value'], JSON.stringify(item));
         $('#add input').val('');
-        _alert('新增基金成功');
+        // refreshFund(true);
+        // refreshJingzhi(true)
         _list();
+        _alert('新增基金成功');
         cloudBackUp(false);
 
 	});
@@ -235,6 +342,8 @@ $(function() {
         //
     })
 
+
+
 	//删除基金
 	$('body').on('click', '.am-btn-danger', function(){
         var id = $(this).attr('data');
@@ -288,8 +397,8 @@ $(function() {
 			id: 'refresh_fund'
 		}).showModal()
 
-        refreshFund(true);
-        refreshJingzhi(true)
+        // refreshFund(true);
+        // refreshJingzhi(true)
         setTimeout(function () {
             _list();
             d.close().remove();
@@ -327,8 +436,17 @@ $(function() {
             $("input[name='notice[]']").removeAttr("checked")
         }
     })
+    $('.refreshTime').on('click', function(){
+        var input_content = $('#refreshTime input').serializeArray();
+        var value = input_content[0]['value'];
+        localStorage.setItem('refreshTime',value)
+        autoRefreshList(parseInt(value))
+    })
 
 	_list();
+    autoRefreshList(refreshTime)
+    // setInterval('alert("欢迎来到CodePlayer");', 3000);
+    // setInterval("_list()", 1000);
 
     //引导页
     if(!localStorage.getItem('help_dialog')){
@@ -366,10 +484,31 @@ $(function() {
             help_dialog_zan.close().remove();
             help_dialog.show($('.document')[0])
         }, 10010)
-
-
     }
-
-
-
 });
+
+// function AutoRefresh( t ) {
+//     // setInterval("_list", 3000);
+//     setInterval('alert("欢迎来到CodePlayer");', t);
+// }
+
+function startAutoRefreshList(time) {
+    chrome.alarms.onAlarm.addListener(function(alarm) {
+    _list()
+    });
+    chrome.alarms.create('refreshList',{periodInMinutes: time});
+    // chrome.alarms.getAll(function(alarm) {
+    //     console.log(alarm)
+    // })
+}
+
+
+function stopAutoRefreshList() {
+    //創造定時器.5 分钟刷新一次
+    chrome.alarms.clear('refreshList');
+}
+
+function autoRefreshList(time){
+    stopAutoRefreshList()
+    startAutoRefreshList(time)
+}
