@@ -29,12 +29,23 @@ var _list = function(){
     refreshJingzhi(true)
 
 	$('.fund_list').remove();
-    var total = 0;
+    // 总估算
+    var total_estimate = 0;
     var total_jingzhi = 0;
-    var total_cost = 0
-    var total_now = 0
-    var total_yingkui_now = 0
-    var total_jingzhi_now = 0
+    // 持仓额
+    var total_position = 0
+    // 总金额
+    var total_amount = 0
+    // 总估算
+    var total_yingkui = 0
+    // 今估算
+    var total_yingkui_today = 0
+
+    // 今/昨收益
+    var total_chiyou_today = 0
+    // 持有合计
+    var total_chiyou = 0
+
     var append_str = '';
 	for(var i in storage_key){
 
@@ -46,15 +57,17 @@ var _list = function(){
                 var json_str = processPrice(json_str)
 				var light = '';
                 var light_now = '';
-                var yingkui_now = 0
-                var jingzhi_now = 0
+                var yingkui = 0
+                var yingkui_today = 0
+                var chiyou = 0
+                var chiyou_today
+                var chiyoushouyi_baifenbi = '-';
+                var zuixin_baifenbi = '-';
+
 				//由于新版没有这个变量，需要手动判断是否为空
 				var fene = isBlank(json_str.fene) ? '' : parseFloat(json_str.fene);
 				var jingzhi = isBlank(json_str.jingzhi) ? '' : parseFloat(json_str.jingzhi);
 				var jingzhi_time = isBlank(json_str.jingzhi_time) ? '' : '( '+json_str.jingzhi_time+' )';
-                // json_str.adding = (json_str.jingzhi * (1-json_str.addingPercent/100)).toFixed(4)
-                // json_str.sell = (json_str.buy * (1+json_str.sellPercent/100)).toFixed(4)
-                // json_str.adding = 0.8000
 
                 if(parseFloat(json_str.adding) >= parseFloat(json_str.now)){
                     light = 'am-success';
@@ -63,67 +76,41 @@ var _list = function(){
                     light = 'am-danger';
                 }
 
-                // console.log(json_str.adding)
-                // console.log(json_str.now)
-                // console.log(parseFloat(json_str.adding) <= parseFloat(json_str.now))
+
 				//盈亏估算 = 持有份额 * 最新价格 - 成本价 * 持有份额
-				var yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(json_str.now) - json_str.buy * fene).toFixed(2) ;
-                if(isNumeric(yingkui)){
-                    total += parseFloat(yingkui);
-                }
+				yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(json_str.now) - json_str.buy * fene).toFixed(2) ;
+                yingkui_today = ((json_str.now-jingzhi) * fene).toFixed(2)
 
                 //持有收益 = 持有份额 * 单位净值 - 成本价 * 持有份额
-				var yingkui_jingzhi = fene == '' || jingzhi == '' ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
-                if(isNumeric(yingkui_jingzhi)){
-                    total_jingzhi += parseFloat(yingkui_jingzhi);
-                }
+				chiyou = fene == '' || jingzhi == '' ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
+                chiyou_today = ((json_str.jingzhi-json_str.last_jingzhi) * fene).toFixed(2)
 
 
-                if(fene == 0 || json_str.buy == 0){
-                    var chiyoushouyi_baifenbi = '-';
-                    var zuixin_baifenbi = '-';
-                }else{
-                    var chiyoushouyi_baifenbi = '持有: ' + (yingkui_jingzhi / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
-                    var zuixin_baifenbi = '实时: ' + (yingkui / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
-                    yingkui_now = ((json_str.now-jingzhi) * fene).toFixed(2)
-                    // console.log(json_str.jingzhi,json_str.last_jingzhi)
-                    // 净值计算今日收益.
-                    jingzhi_now = ((json_str.jingzhi-json_str.last_jingzhi) * fene).toFixed(2)
-                    // console.log(jingzhi_now,json_str.code)
-                    // json_str.gztime = "2020-02-25 13:00"
-                    // console.log(json_str.gztime,gztime,nowTime)
-                    // console.log( getCurrentDate(),json_str.gztime,json_str.jingzhi_time,getCurrentTime())
-                    // console.log( getCurrentTime() , json_str.gztime,getCurrentTime()- json_str.gztime)
-                    // console.log((getCurrentDate() >= json_str.jingzhi_time))
-                    // console.log((json_str.gztime >= getCurrentDate()) && (getCurrentDate() >= json_str.jingzhi_time))
-                    // json_str.gztime = "2020-02-25 13:00"
-                    // json_str.jingzhi_time = "2020-02-25"
-                    var gztime1 = json_str.gztime.substring(0,10)
-                    var gztime = new Date(json_str.gztime).getTime()
-                    var nowTime = new Date().getTime()
-                    // 当前时间和估值时间大约9小时后不在计算 或者净值更新后
-                    // if (( ( nowTime - gztime ) > 9*3600*1000 ) || (gztime1 == json_str.jingzhi_time) ) {
-                    if ( (gztime1 == json_str.jingzhi_time) ) {
-                        // console.log(getCurrentDate())
-                        // console.log(json_str.gztime)
-                        // console.log(getCurrentDate() >= json_str.gztime)
-                         zuixin_baifenbi = '实时: 0%'
-                         yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
-                         yingkui_now = 0
-                    }
+                chiyoushouyi_baifenbi = '持有: ' + (chiyou / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
+                zuixin_baifenbi = '实时: ' + (yingkui / (fene * json_str.buy) * 100 ).toFixed(2) + '%';
+
+                var gztime1 = json_str.gztime.substring(0,10)
+                var gztime = new Date(json_str.gztime).getTime()
+                var nowTime = new Date().getTime()
+
+                if ( (gztime1 == json_str.jingzhi_time) ) {
+                     // zuixin_baifenbi = '实时: 0%'
+                     zuixin_baifenbi = '今昨: ' + ((1-json_str.last_jingzhi/json_str.jingzhi)*100).toFixed(2) + '%';
+                     yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
+                     yingkui_today = 0
                 }
-                // 净值时间和当前时间一样.则估算为0
-                // if (json_str.jingzhi_time == getCurrentDate() ) {
-                //     json_str.now = jingzhi
-                // }
 
                 // 持有成本总金额
-                total_cost += json_str.buy*fene
+                total_position += json_str.buy*fene
                 // 现在持有金额
-                total_now  += json_str.now*fene
+                total_amount  += json_str.now*fene
+                // 今估算
+                total_yingkui += parseFloat(yingkui);
+                total_yingkui_today += parseFloat(yingkui_today)
 
-                total_yingkui_now += parseFloat(yingkui_now)
-                total_jingzhi_now += parseFloat(jingzhi_now)
+                total_chiyou += parseFloat(chiyou);
+                total_chiyou_today += parseFloat(chiyou_today)                // total_chiyou += parseFloat(chiyou)
+
                 var notice = isBlank(json_str.notice) ? '' : parseInt(json_str.notice);
                 var notice_icon = '';
                 switch(notice){
@@ -169,7 +156,7 @@ var _list = function(){
 						// '<td class="am-text-middle">'+yingkui+'</td>' +
                         // 盈亏估算
                         '<td class="am-text-middle">' +
-                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+yingkui_now+'</span>'+
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+yingkui_today+'</span>'+
                             '<span class="am-block">'+yingkui+'</span>'+
                         '</td>' +
                         // 单位净值
@@ -177,8 +164,8 @@ var _list = function(){
                         // 持有收益
 						// '<td class="am-text-middle am-show-lg-only">'+yingkui_jingzhi+'</td>' +
                         '<td class="am-text-middle am-show-lg-only">' +
-                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+jingzhi_now+'</span>'+
-                            '<span class="am-block">'+yingkui_jingzhi+'</span>'+
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+chiyou_today+'</span>'+
+                            '<span class="am-block">'+chiyou+'</span>'+
                         '</td>' +
                         // 收益比
 						'<td class="am-text-middle am-show-lg-only">' +
@@ -199,14 +186,13 @@ var _list = function(){
 
 
     $('#add').after(append_str);
-    $('.total_cost').html(total_cost.toFixed(2));
-    $('.total_now').html(total_now.toFixed(2));
+    $('.total_position').html(total_position.toFixed(2));
+    $('.total_amount').html(total_amount.toFixed(2));
+    $('.total_yingkui_today').html(total_yingkui_today.toFixed(2));
+	$('.total_yingkui').html(total_yingkui.toFixed(2));
+    $('.total_chiyou_today').html(total_chiyou_today.toFixed(2));
+    $('.total_chiyou').html(total_chiyou.toFixed(2));
 
-	$('.total').html(total.toFixed(2));
-    $('.total_yingkui_now').html(total_yingkui_now.toFixed(2));
-	$('.total_jingzhi').html(total_jingzhi.toFixed(2));
-    $('.total_jingzhi_now').html(total_jingzhi_now.toFixed(2));
-    // console.log(getCurrentTime())
     $('.refresh_time').html("刷新时间:" + getCurrentTime());
     // $('.refreshTime').html(localStorage.getItem('refreshTime'));
     if($_GET['preview'] == 'true') {
