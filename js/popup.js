@@ -185,7 +185,7 @@ var _list = function(){
 						'<td class="am-text-middle">'+
                             '<div class="am-inline-block">' +
                                 '<span class="am-btn am-btn-xs am-btn-primary" data="'+json_str.code+'">修改</span>' +
-                                '<span class="am-btn am-btn-xs am-btn-warning fund-analyze" data="'+json_str.code+'">分析</span>' +
+                                // '<span class="am-btn am-btn-xs am-btn-warning fund-analyze" data="'+json_str.code+'">分析</span>' +
                                 '<span class="am-btn am-btn-xs am-btn-danger am-show-lg-only" data="'+json_str.code+'">删除</span>' +
                              '</div>'+
                         '</td>' +
