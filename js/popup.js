@@ -47,6 +47,21 @@ var _list = function(){
     var total_chiyou = 0
 
     var append_str = '';
+    for(var i in storage_key){
+
+        if(isNumeric(storage_key[i])){
+            var content = $_GET['preview'] == 'true' ? JSON.stringify(storage[storage_key[i]]) : localStorage.getItem(storage_key[i]);
+
+            if(content != ''){
+                var json_str = JSON.parse( content );
+                var json_str = processPrice(json_str)
+                // 持有成本总金额
+                total_position += json_str.buy*json_str.fene
+                // 现在持有金额
+                total_amount  += json_str.now*json_str.fene
+            }
+        }
+    }
 	for(var i in storage_key){
 
 		if(isNumeric(storage_key[i])){
@@ -103,10 +118,7 @@ var _list = function(){
                 }
                 position = (json_str.buy*fene).toFixed(2) ;
                 amount = (json_str.now*fene).toFixed(2) ;
-                // 持有成本总金额
-                total_position += json_str.buy*fene
-                // 现在持有金额
-                total_amount  += json_str.now*fene
+
                 // 今估算
                 total_yingkui += parseFloat(yingkui);
                 total_yingkui_today += parseFloat(yingkui_today)
@@ -143,7 +155,7 @@ var _list = function(){
                         '</td>' +
 						'<td class="am-text-middle"><input type="text" size="6" value="'+json_str.buy+'"  placeholder-text="购入价格"  name="buy" /></td>' +
 						'<td class="am-text-middle">' +
-                            ' - <input type="text" size="2" value="'+json_str.addingPercent+'"  placeholder-text="补仓价格" name="addingPercent" /> % ' +
+                            ' - <input type="text" class="am-text-center" size="2" value="'+json_str.addingPercent+'"  placeholder-text="补仓价格" name="addingPercent" /> % ' +
                             // '<span class="am-block">'+json_str.adding+'</span>'+
                             // '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+zuixin_baifenbi+'</span>'+
                             // '<span class="am-block">'+chiyoushouyi_baifenbi+'</span>'+
@@ -177,6 +189,7 @@ var _list = function(){
                             '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+position+'</span>'+
                             '<span class="am-block">'+amount+'</span>'+
                         '</td>' +
+                        '<td class="am-text-middle am-show-lg-only">'+(position/total_position).toFixed(2)*100+'%</td>'+
                         // 收益比
 						'<td class="am-text-middle am-show-lg-only">' +
                             '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+zuixin_baifenbi+'</span>'+
