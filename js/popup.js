@@ -186,8 +186,8 @@ var _list = function(){
                         '</td>' +
                         // 金额
                         '<td class="am-text-middle am-show-lg-only">' +
-                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+position+'</span>'+
-                            '<span class="am-block">'+amount+'</span>'+
+                            '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+amount+'</span>'+
+                            '<span class="am-block">'+position+'</span>'+
                         '</td>' +
                         '<td class="am-text-middle am-show-lg-only">'+(position/total_position).toFixed(2)*100+'%</td>'+
                         // 收益比
