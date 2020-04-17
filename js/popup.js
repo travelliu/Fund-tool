@@ -189,7 +189,7 @@ var _list = function(){
                             '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+amount+'</span>'+
                             '<span class="am-block">'+position+'</span>'+
                         '</td>' +
-                        '<td class="am-text-middle am-show-lg-only">'+(position/total_position).toFixed(2)*100+'%</td>'+
+                        '<td class="am-text-middle am-show-lg-only">'+parseFloat((position/total_position).toFixed(2)*100).toFixed(2)+'%</td>'+
                         // 收益比
 						'<td class="am-text-middle am-show-lg-only">' +
                             '<span class="am-block" style="border-bottom: 1px solid #c7c7c7">'+zuixin_baifenbi+'</span>'+
