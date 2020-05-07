@@ -112,7 +112,9 @@ var _list = function(){
 
                 if ( (gztime1 == json_str.jingzhi_time) ) {
                      // zuixin_baifenbi = '实时: 0%'
-                     zuixin_baifenbi = '今昨: ' + ((1-json_str.last_jingzhi/json_str.jingzhi)*100).toFixed(2) + '%';
+                     console.log(((json_str.jingzhi-json_str.last_jingzhi)/json_str.last_jingzhi*100).toFixed(2))
+                     // zuixin_baifenbi = '今昨: ' + ((1-json_str.last_jingzhi/json_str.jingzhi)*100).toFixed(2) + '%';
+                     zuixin_baifenbi = '今昨: ' + ((json_str.jingzhi-json_str.last_jingzhi)/json_str.last_jingzhi*100).toFixed(2) + '%';
                      yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
                      yingkui_today = 0
                 }
