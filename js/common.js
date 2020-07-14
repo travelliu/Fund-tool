@@ -318,3 +318,25 @@ var processPrice = function(record) {
     }
     return record
 }
+function calcNewJingZhi(code,money) {
+    console.log(code,money)
+    var content = localStorage.getItem(code);
+    if(content != '') {
+        var json_str = JSON.parse(content);
+        var totalMoney= json_str.buy * json_str.fene + money
+        var totalFene = parseFloat(json_str.fene) + parseFloat(money)/parseFloat(json_str.jingzhi)
+        var cost = parseFloat(totalMoney/totalFene).toFixed(4)
+        console.log(code,money,totalMoney,totalFene,cost)
+    }
+}
+function calcNewGuZhi(code,money) {
+
+    var content = localStorage.getItem(code);
+    if(content != '') {
+        var json_str = JSON.parse(content);
+        var totalMoney= json_str.buy * json_str.fene + money
+        var totalFene = parseFloat(json_str.fene) + parseFloat(money)/parseFloat(json_str.now)
+        var cost = parseFloat(totalMoney/totalFene).toFixed(4)
+        console.log(code,money,json_str.now,totalMoney,totalFene,cost)
+    }
+}
