@@ -143,7 +143,8 @@ var refreshFund = function (user) {
                                     }
                                 }
                             }catch (err){
-                                console.log('获取'+key+' 基金信息失败');
+                                //查找本地存储的基金数据
+                                console.log('获取'+key+' 基金失败');
                             }
                         }
                     }
@@ -181,7 +182,6 @@ var refreshJingzhi = function (user) {
                             //将JSONP格式手动解析为JSON字符串
 
                             try{
-
                                 var result_match = result.match(/<tbody.*>.*?<\/tbody>/);
                                 if(result_match){
                                     var jingzhi = $(result_match[0]).find('.tor.bold').html();
@@ -308,13 +308,13 @@ var processPrice = function(record) {
         record['last_jingzhi'] = record['jingzhi']
     }
     if (typeof record['now'] === "undefined") {
-        record['now'] = '-'
+        record['now'] = ''
     }
     if (typeof record['nowzl'] === "undefined") {
-        record['nowzl'] = '-'
+        record['nowzl'] = ''
     }
     if (typeof record['gztime'] === "undefined") {
-        record['gztime'] = '-'
+        record['gztime'] = ''
     }
     return record
 }

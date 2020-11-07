@@ -93,11 +93,11 @@ var _list = function(){
                     light = 'am-danger';
                 }
 
-
 				//盈亏估算 = 持有份额 * 最新价格 - 成本价 * 持有份额
-				yingkui = fene == '' || isBlank(json_str.now) ? '-' : (fene * parseFloat(json_str.now) - json_str.buy * fene).toFixed(2) ;
+				yingkui = fene == '' || isBlank(json_str.now) ? '0' : (fene * parseFloat(json_str.now) - json_str.buy * fene).toFixed(2) ;
                 // yingkui_today = ((json_str.now-jingzhi) * fene).toFixed(2)
-                yingkui_today = (json_str.nowzl / 100 * json_str.jingzhi * fene).toFixed(2)
+                yingkui_today = isBlank(json_str.nowzl) ? '0' : (json_str.nowzl / 100 * json_str.jingzhi * fene).toFixed(2)
+
                 //持有收益 = 持有份额 * 单位净值 - 成本价 * 持有份额
 				chiyou = fene == '' || jingzhi == '' ? '-' : (fene * parseFloat(jingzhi) - json_str.buy * fene).toFixed(2) ;
                 chiyou_today = ((json_str.jingzhi-json_str.last_jingzhi) * fene).toFixed(2)
@@ -171,7 +171,10 @@ var _list = function(){
                             '<input type="text" size="8" value="'+fene+'" placeholder-text="持有份额" name="fene" />' +
                         '</td>' +
                         // 最新估值
-						'<td class="am-text-middle '+ light_now +'" title="最后更新时间: '+json_str.gztime+'">'+json_str.now+'<span class="am-block">'+json_str.nowzl+'%</span></td>' +
+						'<td class="am-text-middle '+ light_now +'" title="最后更新时间: '+json_str.gztime+'">'+ 
+                            (isBlank(json_str.now) ? json_str.jingzhi : json_str.now) + 
+                            '<span class="am-block">'+(isBlank(json_str.now) ? 0 : json_str.nowzl) +
+                        '%</span></td>' +
 						// '<td class="am-text-middle">'+yingkui+'</td>' +
                         // 盈亏估算
                         '<td class="am-text-middle">' +
@@ -507,6 +510,7 @@ function startAutoRefreshList(time) {
     chrome.alarms.onAlarm.addListener(function(alarm) {
     _list()
     });
+    console.log(time)
     chrome.alarms.create('refreshList',{periodInMinutes: time});
     // chrome.alarms.getAll(function(alarm) {
     //     console.log(alarm)
